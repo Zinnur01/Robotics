@@ -8,8 +8,9 @@ mousePosition: tuple[int, int] = (0, 0)
 isMouseDrag: bool = False
 isMouseDown: bool = False
 rectStartPos: tuple[int, int] = (0, 0)
-points: list[tuple[int, int]] = []
+groups: list[tuple[int, int]] = [()]
 selectedPointIndex: int = -1
+selectedGroupIndex: int = 0
 
 def distance(a, b):
     return int(math.sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1])))
@@ -19,9 +20,10 @@ def onMouse(event, x, y, flags, param):
     global mousePosition
     global isMouseDrag
     global isMouseDown
-    global selectedPointIndex
     global rectStartPos
-    global points
+    global groups
+    global selectedPointIndex
+    global selectedGroupIndex
 
     mousePosition = (x, y)
 
@@ -30,11 +32,11 @@ def onMouse(event, x, y, flags, param):
         isMouseDrag = True
 
     if event == cv2.EVENT_LBUTTONUP:
-        points = [rectStartPos, (x, rectStartPos[1]), (x, y), (rectStartPos[0], y)]
+        groups[selectedGroupIndex] = [rectStartPos, (x, rectStartPos[1]), (x, y), (rectStartPos[0], y)]
         isMouseDrag = False
 
     if event == cv2.EVENT_RBUTTONDOWN:
-        for i, point in enumerate(points):
+        for i, point in enumerate(groups[selectedGroupIndex]):
             if distance(point, (x, y)) < 20:
                 selectedPointIndex = i
         isMouseDown = True
@@ -45,7 +47,7 @@ def onMouse(event, x, y, flags, param):
 
     if event == cv2.EVENT_MOUSEMOVE:
         if isMouseDown and selectedPointIndex != -1:
-            points[selectedPointIndex] = (x, y)
+            groups[selectedGroupIndex][selectedPointIndex] = (x, y)
 
 
 cv2.imshow("Image", img)
@@ -53,46 +55,58 @@ cv2.setMouseCallback("Image", onMouse)
 
 while True:
     img = cv2.imread("../../../Resources/cards.jpg")
+    img_copy = img.copy()
 
-    if isMouseDrag:
-        cv2.rectangle(img, rectStartPos, (mousePosition[0], mousePosition[1]), (0, 0, 255), 2)
-    else:
-        if len(points) == 4:
-            width = distance(points[0], points[1])
-            height = distance(points[0], points[3])
+    for i, points in enumerate(groups):
+        if isMouseDrag and i == selectedGroupIndex:
+            cv2.rectangle(img_copy, rectStartPos, (mousePosition[0], mousePosition[1]), (0, 0, 255), 2)
+        else:
+            if len(points) == 4:
+                width = distance(points[0], points[1])
+                height = distance(points[0], points[3])
 
-            # Calculate perspective matrix
-            fromMatrix = np.float32([points[0], points[1], points[2], points[3]])
-            toMatrix = np.float32([
-                [0, 0],
-                [width, 0],
-                [width, height],
-                [0, height]
-            ])
-            perspectiveMatrix = cv2.getPerspectiveTransform(fromMatrix, toMatrix)
+                # Calculate perspective matrix
+                fromMatrix = np.float32([points[0], points[1], points[2], points[3]])
+                toMatrix = np.float32([
+                    [0, 0],
+                    [width, 0],
+                    [width, height],
+                    [0, height]
+                ])
+                perspectiveMatrix = cv2.getPerspectiveTransform(fromMatrix, toMatrix)
 
-            # Warp perspective image
-            out_image = cv2.warpPerspective(img, perspectiveMatrix, (width, height))
-            cv2.imshow("Warped image", out_image)
+                # Warp perspective image
+                out_image = cv2.warpPerspective(img, perspectiveMatrix, (width, height))
+                cv2.imshow(f"Warped image {i}", out_image)
 
-            # Draw frame lines
-            cv2.line(img, points[0], points[1], (0, 0, 255), 2)
-            cv2.line(img, points[1], points[2], (0, 0, 255), 2)
-            cv2.line(img, points[2], points[3], (0, 0, 255), 2)
-            cv2.line(img, points[3], points[0], (0, 0, 255), 2)
+                # Draw frame lines
+                cv2.line(img_copy, points[0], points[1], (0, 0, 255), 2)
+                cv2.line(img_copy, points[1], points[2], (0, 0, 255), 2)
+                cv2.line(img_copy, points[2], points[3], (0, 0, 255), 2)
+                cv2.line(img_copy, points[3], points[0], (0, 0, 255), 2)
 
-            # Draw frame vertices
-            for point in points:
-                cv2.circle(img, point, 5, (255, 0, 0), -1)
+                # Draw frame vertices
+                for point in points:
+                    cv2.circle(img_copy, point, 5, (255, 0, 0), -1)
 
-    cv2.imshow("Image", img)
+    cv2.putText(img_copy, f"Selected group: {selectedGroupIndex}", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+
+    cv2.imshow("Image", img_copy)
     key = cv2.waitKey(1) & 0xFF
     if key == ord('q'):
         break
     if key == ord('c'):
         print("Clear points")
-        points = []
+        groups[selectedGroupIndex] = []
     if key == ord('s'):
-        if len(points) == 4:
+        if len(groups) == 4:
             cv2.imwrite("Outputs/warped-image.jpg", out_image)
             break
+    if key == ord('d'):
+        selectedGroupIndex += 1
+        if len(groups) <= selectedGroupIndex:
+            groups.append(())
+    if key == ord('a'):
+        selectedGroupIndex -= 1
+        if selectedGroupIndex < 0:
+            selectedGroupIndex = 0
