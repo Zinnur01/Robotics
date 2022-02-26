@@ -98,8 +98,7 @@ while True:
                 for point in points:
                     cv2.circle(img_copy, point, 5, vertexColor, -1)
 
-    cv2.putText(img_copy, f"Selected group: {selectedGroupIndex}", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0),
-                2)
+    cv2.putText(img_copy, f"Selected group: {selectedGroupIndex}", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
     cv2.imshow("Image", img_copy)
     key = cv2.waitKey(1) & 0xFF
@@ -116,3 +115,5 @@ while True:
         selectedGroupIndex -= 1
         if selectedGroupIndex < 0:
             selectedGroupIndex = 0
+
+cv2.destroyAllWindows()

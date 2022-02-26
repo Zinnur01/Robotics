@@ -8,7 +8,7 @@ mousePosition: tuple[int, int] = (0, 0)
 isMouseDrag: bool = False
 isMouseDown: bool = False
 rectStartPos: tuple[int, int] = (0, 0)
-groups: list[tuple[int, int]] = [()]
+groups: list[list[tuple[int, int]]] = [()]
 selectedPointIndex: int = -1
 selectedGroupIndex: int = 0
 
@@ -113,3 +113,5 @@ while True:
         selectedGroupIndex -= 1
         if selectedGroupIndex < 0:
             selectedGroupIndex = 0
+
+cv2.destroyAllWindows()
