@@ -3,9 +3,6 @@ import cv2
 videoPath: str = "../../../Resources/crossroad.mp4"
 cap = cv2.VideoCapture(videoPath)
 
-cap.get(1)  # current frame index
-cap.get(7)  # max frame count
-
 pause = False
 recording = False
 waitText = False
@@ -56,7 +53,7 @@ print("End!!!")
 
 cap = cv2.VideoCapture(videoPath)
 frame_size = int(cap.get(3)), int(cap.get(4))
-saveVideo = cv2.VideoWriter("Outputs/saved_video.avi", cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 30, frame_size)
+saveVideo = cv2.VideoWriter("Outputs/saved_video.avi", cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 60, frame_size)
 
 currentAnnotation = None
 
@@ -76,7 +73,7 @@ while cap.isOpened():
             currentAnnotation = a
 
     if currentAnnotation:
-        cv2.putText(frame, currentAnnotation[2], (50, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 0), 1)
+        cv2.putText(frame, currentAnnotation[2], (50, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 1)
 
     saveVideo.write(frame)
 
