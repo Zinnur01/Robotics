@@ -42,7 +42,6 @@ while cap.isOpened():
         pause = not pause
 
 
-
 if recording:
     annotationText = input("Enter annotation text: ")
     annotations.append((startFrame, cap.get(7), annotationText))
